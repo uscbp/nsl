@@ -1,0 +1,70 @@
+<project name="NSL" default="dist" basedir=".">
+    <property name="nslc_src" location="nslc/src"/>
+    <property name="nslc_build" location="nslc/classes"/>
+    <property name="nslj_src" location="nslj/src"/>
+    <property name="nslj_build" location="nslj/classes"/>
+    <property name="lib" location="lib"/>
+    <property environment="env"/>
+
+    <target name="nslc_init">
+        <mkdir dir="${nslc_build}"/>
+    </target>
+
+    <target name="nslj_init">
+        <mkdir dir="${nslj_build}"/>
+    </target>
+
+    <target name="init" depends="nslc_init,nslj_init"/>
+
+    <target name="nslj_compile" depends="nslj_init">
+        <javac srcdir="${nslj_src}" destdir="${nslj_build}">
+            <classpath path="${lib}/ext"/>
+            <classpath path="${lib}/ext/epsGraphics.jar"/>
+            <classpath path="${lib}/ext/j3dcore.jar"/>
+            <classpath path="${lib}/ext/j3dutils.jar"/>
+            <classpath path="${lib}/ext/jacl.jar"/>
+            <classpath path="${lib}/ext/jmatlink.jar"/>
+            <classpath path="${lib}/ext/jmatio.jar"/>
+            <classpath path="${lib}/ext/odejava-jni.jar"/>
+            <classpath path="${lib}/ext/odejava.jar"/>
+            <classpath path="${lib}/ext/openmali.jar"/>
+            <classpath path="${lib}/ext/vecmath.jar"/>
+        </javac>
+    </target>
+
+    <target name="nslc_compile" depends="nslc_init">
+        <delete file="${nslc_src}/nslc/src/TokenMgrError.java"/>
+        <delete file="${nslc_src}/nslc/src/Token.java"/>
+        <delete file="${nslc_src}/nslc/src/JavaCharStream.java"/>
+        <delete file="${nslc_src}/nslc/src/NslParser.java"/>
+        <delete file="${nslc_src}/nslc/src/NslParserConstants.java"/>
+        <delete file="${nslc_src}/nslc/src/NslParserTokenManager.java"/>
+        <javacc javacchome="${env.JAVA_CC_HOME}" outputdirectory="${nslc_src}/nslc/src"
+                target="${nslc_src}/nsl.jj" keeplinecolumn="true" static="false" javaunicodeescape="true"/>
+        <javac srcdir="${nslc_src}" destdir="${nslc_build}">
+            <classpath path="${nslj_build}"/>
+        </javac>
+    </target>
+
+    <target name="compile" depends="nslj_compile,nslc_compile"/>
+
+    <target name="nslc_clean">
+        <delete dir="${nslc_build}"/>
+    </target>
+
+    <target name="nslj_clean">
+        <delete dir="${nslj_build}"/>
+    </target>
+
+    <target name="clean" depends="nslc_clean,nslj_clean"/>
+
+    <target name="nslc_dist" depends="nslc_compile">
+        <jar jarfile="nslc.jar" basedir="${nslc_build}"/>
+    </target>
+
+    <target name="nslj_dist" depends="nslj_compile">
+        <jar jarfile="nslj.jar" basedir="${nslj_build}"/>
+    </target>
+
+    <target name="dist" depends="nslj_dist,nslc_dist"/>
+</project>

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+
+<project name="JMatLink" basedir="." default="dist">
+
+    <!-- grab the properties file -->
+    <property environment="env"/>
+    <property file="build.properties" />
+    <condition property="libFile" value="JMatLink.dll">
+        <os family="windows"/>
+    </condition>
+    <condition property="libFile" value="libJMatLink.so">
+        <os family="unix"/>
+    </condition>
+    <condition property="osLibDir" value="${build.dir}\..\..\win32">
+        <os family="windows"/>
+    </condition>
+    <condition property="osLibDir" value="${build.dir}/../../i386">
+        <os family="unix"/>
+    </condition>
+
+    <!-- include all the jars in the classpath -->
+    <path id="classpath">
+      <fileset dir="." >
+        <include name="**/*.jar" />
+      </fileset>
+    </path>
+
+    <!-- ================================================================= -->
+    <!-- E N V                                                             -->
+    <!-- ================================================================= -->
+    <target name="env" >
+        <echo message="java.home = ${java.home}" />
+        <echo message="user.home = ${user.home}" />
+    </target>
+
+    <!-- ================================================================= -->
+    <!-- C O M P I L E                                                     -->
+    <!-- ================================================================= -->
+    <target name="compileLibs" depends="env">
+
+    <!-- compile object file -->
+        <exec executable="bcc32" dir="${build.src}/jmatlink/" os="windows">
+            <arg line="-Ic:\j2sdk1.4.2_06\include -Ic:\j2sdk1.4.2_06\include\Win32 -c -3 -a8 -w- -b -g30 -Ic:\bcc\INCLUDE -oJMatLink.obj -IC:\MATLAB6p5\extern\include -IC:\MATLAB6p5\simulink\include -O1 -DNDEBUG JMatLink.c"/>
+        </exec>
+
+    <!-- link object file to DLL -->
+        <exec executable="bcc32" dir="${build.src}/jmatlink/" os="WINNT">
+            <arg line="-DLL -e${build.dir}\JMatLink.dll -tWD -Lc:\bcc\lib\32bit -Lc:\bcc\lib -LC:\MATLAB6p5\extern\lib\win32\borland\bc50 libmx.lib libmat.lib libeng.lib  JMatLink.obj" />
+        </exec>
+        <delete file="${build.src}/jmatlink/JMatLink.obj" />
+        <delete file="${build.src}/jmatlink/JMatLink.tds" />
+
+        <exec executable="make" dir="${build.dir}" os="Linux">
+            <arg value="-f"/>
+            <arg value="Makefile"/>
+        </exec>
+
+    </target>
+
+    <target name="compileLibsAmd64" depends="env">
+
+        <exec executable="make" dir="${build.dir}" os="Linux">
+            <arg value="-f"/>
+            <arg value="Makefile.amd64"/>
+        </exec>
+
+    </target>
+
+    <target name="compile" depends="env">
+
+        <javac srcdir="${build.src}" destdir="${build.dir}/.."/>
+
+    </target>
+
+    <target name="dist" depends="compile">
+        <jar basedir="${build.dir}../" jarfile="${build.dir}/../jmatlink.jar" includes="jmatlink/*.class"/>
+        <delete file="${build.dir}/CoreJMatLink.class"/>
+        <delete file="${build.dir}/JMatLink.class"/>
+        <delete file="${build.dir}/JMatLinkException.class"/>
+        <!--<copy file="${libFile}" todir="${libDest}"/>-->
+        <move file="${libFile}" todir="${osLibDir}"/>
+    </target>
+</project>
